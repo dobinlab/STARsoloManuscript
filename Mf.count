@@ -1,0 +1,214 @@
+include Mf.common
+include $(dd)/Mf.pars
+
+.SECONDARY:
+
+.PHONY:
+all:
+	echo No default target, please specify one.
+
+######################################################### common definitions
+define PREP_
+	date
+endef
+define PREP_sleep
+	date
+	sleep 900
+	date
+endef
+define PREP_memUsage
+	date
+	sleep 20
+	$(dd)/scripts/memUsage.sh $(processName) &> $(@D)/mem.log &
+endef
+
+#sleep 300
+
+######################################################### kb counting
+count/kbpy_%: processName:=kb
+
+count/kbpy_%/CO:
+	$(PREP_$(PREPoption))
+	'rm' -rf $(@D) && mkdir -p $(@D) && cd $(@D) &&\
+	$(COUNT_$(tool))
+
+define kbPar_mult =
+	--mm
+endef
+
+define COUNT_kbpy_0.25.0 =
+	eval "$$(conda shell.bash hook)" && conda activate $(tool) && \
+	$(timer) kb count -t $(threads) -x $(tech)V$(techV) --workflow $(genomeT1) \
+                  -i `ls -m $(refDir)/index* | tr -d ' \n'` -g $(refDir)/g -c1 $(refDir)/c1 -c2 $(refDir)/c2 -o ./ \
+                  `paste <(ls $(sampleDir)/*_R1*) <(ls $(sampleDir)/*_R2*)` \
+		  $(kbPar_$(toolP)) >& log && \
+	echo Success > CO
+endef
+
+######################################################### STAR count
+STARpar_10X          := --soloType CB_UMI_Simple
+STARpar_noSAM        := --outSAMtype None
+STARpar_GeneFull     := --soloFeatures GeneFull
+STARpar_mult         := --soloMultiMappers Uniform Rescue PropUnique EM
+STARpar_ENCODE       := --outFilterType BySJout --outFilterMultimapNmax 20 --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverReadLmax 0.04 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000
+STARpar_sims         := --soloUMIdedup Exact --soloUMIfiltering MultiGeneUMI_All --clipAdapterType CellRanger4
+STARpar_CR4          := --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts --soloUMIfiltering MultiGeneUMI_CR --soloUMIdedup 1MM_CR --soloCellFilter EmptyDrops_CR --clipAdapterType CellRanger4 --outFilterScoreMin 30 --outSJtype None
+
+####################################################### not used
+STARpar_GeneGeneFull := --soloFeatures Gene GeneFull
+STARpar_MultiGeneUMI := --soloUMIfiltering MultiGeneUMI
+STARpar_MultiGeneUMI-All := --soloUMIfiltering MultiGeneUMI_All
+STARpar_UMIdedupExact:= --soloUMIdedup Exact 
+STARpar_BAM          := --outSAMattributes NH HI nM AS CR UR CB UB GX GN --outSAMtype BAM SortedByCoordinate
+#STARpar_noSJ         := --outSJtype None
+STARpar_UniqueGenomic   := --outFilterMultimapNmax 1
+STARpar_CR3old := --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts
+STARpar_CR3    := $(STARpar_CR3old) --soloUMIdedup 1MM_CR --soloCellFilter EmptyDrops_CR
+
+count/STAR_%: STARparCommon = --limitIObufferSize 50000000 50000000
+count/STAR_%: STARparAll = $(STARparCommon)   $(EXTRA_PARS)   $(foreach pp, $(subst _, , $(toolP)), $(STARpar_$(pp)))
+
+count/STAR_%: read1=$(shell cd $(sampleDir) && ls *_R1* | tr ' \n' ',' | head -c -1)
+count/STAR_%: read2=$(shell cd $(sampleDir) && ls *_R2* | tr ' \n' ',' | head -c -1) 
+count/STAR_%: STARreadComm=$(if $(filter $(read1),gz), zcat, cat)
+
+count/STAR_%: processName:=STAR
+
+count/STAR_%/CO: # target is COmpletion file
+	#$(case)
+	#$(tech) $(techV) $(sampleName) $(threads)
+	# $(PREPoption)
+	ls -d $(sampleDir) $(refDir) $(dd)/data/whitelists/$(tech)v$(techV)
+	$(PREP_$(PREPoption))
+	'rm' -rf $(@D) && mkdir -p $(@D) && cd $(@D) &&\
+	if [[ $(read1) == *\.gz ]]; then STARreadComm=zcat; else STARreadComm=cat; fi  && \
+	$(timer) $(dd)/exe/$(tool) --genomeDir $(refDir) --runThreadN $(threads)  --readFilesCommand $$STARreadComm \
+		--readFilesPrefix $(sampleDir) --readFilesIn $(read2) $(read1) \
+		--soloCBwhitelist $(dd)/data/whitelists/$(tech)v$(techV) \
+		--soloUMIlen $(umiLen) \
+		$(STARparAll) >& log && \
+	echo Success > CO
+
+
+### not used
+# for BAM
+#taskset -c -a 0-17,36-39 \
+#
+
+########################################################################################################## SALMON
+count/salmon%: processName:=salmon
+
+count/salmon%: tech10Xv2=chromium
+count/salmon%: tech10Xv3=chromiumV3
+count/salmon%: t2gFile=$(dd)/genomes/$(genome)/transcript_to_gene.2col.txt
+
+salmonPar_sketch := --sketch
+salmonPar_rad    := --rad
+count/salmon%: salmonParAll=alevin -l ISR $(foreach pp, $(subst _, , $(toolP)), $(salmonPar_$(pp)))
+
+######################################################### salmon alevin-fry
+
+count/salmon-alevin-fry_%: salmon=salmon_$(word 2, $(subst _, ,$(tool)))
+count/salmon-alevin-fry_%: alevin-fry=alevin-fry_$(word 3, $(subst _, ,$(tool)))
+
+count/salmon-alevin-fry_%/map/COMmap:
+	$(PREP_$(PREPoption))
+	mkdir -p count/salmon-alevin-fry_$* && cd count/salmon-alevin-fry_$* &&\
+	$(RUN_salmon)
+
+count/salmon-alevin-fry_%/gpl_$(afGplOpt)/COMgpl: count/salmon-alevin-fry_%/map/COMmap
+	mkdir -p $(@D) && cd $(@D) && \
+	$(RUN_alevin-fry_generate-permit-list)
+
+count/salmon-alevin-fry_%/gpl_$(afGplOpt)/COMcollate: count/salmon-alevin-fry_%/gpl_$(afGplOpt)/COMgpl
+	cd $(@D) &&\
+	$(RUN_alevin-fry_collate)
+
+### main target
+count/salmon-alevin-fry_%/CO: count/salmon-alevin-fry_%/gpl_$(afGplOpt)/COMcollate
+	cd count/salmon-alevin-fry_$*/gpl_$(afGplOpt) &&\
+	$(RUN_alevin-fry_quant) &&\
+	echo Success > ../CO
+
+##################################### salmon
+define RUN_salmon
+	$(timer) $(dd)/exe/$(salmon)    $(salmonParAll) \
+	-1 $(sampleDir)/*_R1_* -2 $(sampleDir)/*_R2_* \
+	--$(techOption) -p $(threads) -o ./map \
+        -i $(refDir)/index --tgMap  $(t2gFile) &> log.salmon &&\
+	echo Success > ./map/COMmap
+endef
+
+#################################### alevin-fry generate-permit-list
+afGplPar_knee := --knee-distance
+afGplPar_force10M := --force-cells 10000000
+count/salmon-alevin-fry%: afGplParAll = -d fw $(foreach pp, $(subst _, , $(afGplOpt)), $(afGplPar_$(pp)))
+
+define RUN_alevin-fry_generate-permit-list
+	eval "$$(conda shell.bash hook)" && conda activate $(alevin-fry) && \
+	$(timer) alevin-fry generate-permit-list   $(afGplParAll)   -i ../map -o ./ &> log.gpl &&\
+	echo Success > COMgpl
+endef
+
+################################### alevin-fry collate
+define RUN_alevin-fry_collate
+	eval "$$(conda shell.bash hook)" && conda activate $(alevin-fry) && \
+	$(timer) alevin-fry collate -t $(threads) -i ./ -r ../map &> log.collate &&\
+	echo Success > COMcollate
+endef	
+
+################################### alevin-fry quant
+afQuantResolutions := trivial cr-like cr-like-em
+
+define RUN_alevin-fry_quant
+	eval "$$(conda shell.bash hook)" && conda activate $(alevin-fry) &&\
+	cp $(t2gFile) t2g.txt && if [[ $@ == *decoy* ]]; then awk '{print $$1 "\t" $$1}' $(refDir)/decoys.txt >> t2g.txt; fi &&\
+	for res in $(afQuantResolutions); do \
+		$(timer) alevin-fry quant --resolution $$res -t $(threads) -i ./ -o ./quant_$$res --use-mtx --tg-map t2g.txt &> log.quant_$$res &&\
+		echo Success > ./quant_$$res/CO; \
+	done
+endef
+
+
+####################################################################################### CellRanger
+######################################################### CR count
+count/CellRanger_%: processName=cellranger
+
+CRpar_mem16G   := --localmem 16 --localvmem 16
+CRpar_mem32G   := --localmem 32 --localvmem 32
+CRpar_intronic := --include-introns
+CRpar_noBAM    := --no-bam
+
+count/CellRanger_%: CRparAll=$(foreach pp, $(subst _, , $(toolP)), $(CRpar_$(pp)))
+
+
+count/CellRanger_5.0.1/%/CO:
+	# $(case)
+	# $(tech) $(techV) $(sampleName) $(threads)
+	# $(PREPoption)
+	ls -d $(sampleDir) $(refDir)
+	#
+	'rm' -rf $(@D) && mkdir -p $(@D)
+	$(PREP_$(PREPoption))
+	cd $(@D) &&\
+	$(timer) $(dd)/exe/cellranger-5.0.1/cellranger count --id Run1 --localcores $(threads) \
+			--nosecondary --disable-ui \
+			--fastqs $(sampleDir) --transcriptome $(refDir) $(CRparAll) >& log && \
+	echo Success > CO
+# --nopreflight \
+
+########################################### Old CR
+count/CellRanger_3.1.0/%/CO:
+	$(PREP_dir_mem)
+	cd $(@D) && \
+	$(timer) $(dd)/exe/cellranger-3.1.0/cellranger count --id Run1 --localcores $(threads) \
+			--fastqs $(sampleDir) --transcriptome $(refDir) $(CRparAll) >& log && \
+	echo Success > CO
+
+count/CellRanger_4.0.0/%/CO:
+	$(PREP_dir_mem)
+	cd $(@D) && \
+	$(timer) $(dd)/exe/cellranger-4.0.0/cellranger count --id Run1 --localcores $(threads) \
+			--nosecondary --disable-ui --nopreflight \
+			--fastqs $(sampleDir) --transcriptome $(refDir) $(CRparAll) >& log && \
+	echo Success > CO

@@ -1,0 +1,86 @@
+include ../Mf.common
+
+nThreads:=20 # default
+include ../Mf.pars
+
+.PHONY: all
+all:
+	echo No common target
+
+######################################################## STAR references
+define STAR_pars_common =
+	--runMode genomeGenerate --runThreadN $(nThreads) --genomeDir ./ \
+	--genomeFastaFiles $(dd)/genomes/$(genome)/genome.fa  \
+	--sjdbGTFfile $(dd)/genomes/$(genome)/annotations.gtf
+endef
+
+define STAR_pars_sparseSA3 =
+	--genomeSAsparseD 3
+endef
+
+define INDEX_STAR =
+	mkdir -p $(@D) && cd $(@D) && \
+	$(dd)/exe/$(tool) $(STAR_pars_common) $(STAR_pars_$(genomeT)) >& log && \
+	echo Success > CO
+endef
+
+index/STAR_%/CO:
+	$(INDEX_STAR)
+
+######################################################## alevin reference
+salmonParAll = --keepDuplicates
+
+index/salmon_%/standard/CO:
+	mkdir -p $(@D) && cd $(@D) && \
+	runCommand="$(dd)/exe/$(tool)   $(salmonParAll)   index -t $(dd)/genomes/$(genome)/transcripts.fa -i index -p $(nThreads)" &&\
+	echo $$runCommand  > log &&\
+	$$runCommand &>> log &&\
+	echo Success > CO
+
+index/salmon_%/decoyFull/CO:
+	mkdir -p $(@D) && cd $(@D) &&\
+	awk '$$1~/^>/ {print substr($$1,2)}' $(dd)/genomes/$(genome)/genome.fa > decoys.txt &&\
+	cat $(dd)/genomes/$(genome)/transcripts.fa $(dd)/genomes/$(genome)/genome.fa > gentrome.fa &&\
+	runCommand="$(dd)/exe/$(tool) index   $(salmonParAll)    -t gentrome.fa -d decoys.txt --gencode -i index -p $(nThreads)" &&\
+	echo $$runCommand  > log &&\
+	$$runCommand &>> log &&\
+	echo Success > CO
+
+############################## partial decoy
+index/salmon_%/decoyPartial/CO: index/salmon_%/decoyPartial/COMdecoy
+	mkdir -p $(@D) && cd $(@D) &&\
+	runCommand="$(dd)/exe/$(tool) index   $(salmonParAll)    -t ./gentrome/gentrome.fa -d ./gentrome/decoys.txt --gencode -i index -p $(nThreads)" &&\
+	echo $$runCommand  > log &&\
+	$$runCommand &>> log &&\
+	echo Success > CO
+
+index/salmon_%/decoyPartial/COMdecoy:
+	mkdir -p $(@D) && cd $(@D) &&\
+	$(dd)/exe/generateDecoyTranscriptome.sh -j $(nThreads) -b $(dd)/exe/bedtools -m $(dd)/exe/mashmap \
+	-a $(dd)/genomes/$(genome)/annotations.gtf -g $(dd)/genomes/$(genome)/genome.fa -t $(dd)/genomes/$(genome)/transcripts.fa -o ./gentrome &&\
+	ln -s ./gentrome/decoys.txt . &&\
+	echo Success &> COMdecoy
+
+######################################################## kbpy INDEX
+# conda cannot be activated from a script
+#$(CONDA_ACTIVATE) $(tool)
+#eval "$$(conda shell.bash hook)" && conda activate $(tool)
+
+define INDEX_kbpy =
+	eval "$$(conda shell.bash hook)" && conda activate $(tool) && \
+	'rm' -rf $(@D) && mkdir -p $(@D) && cd $(@D) && \
+	kb ref -i index --workflow $(genomeT1) -f1 f1 -f2 f2 -c1 c1 -c2 c2 -g g -n $(genomeT2) \
+						  $(dd)/genomes/$(genome)/genome.fa $(dd)/genomes/$(genome)/annotations.gtf >& log && \
+	echo Success > CO
+endef
+
+index/kbpy_%/CO:
+	$(INDEX_kbpy)
+
+kbpy-types/%:
+	make -f Mf.index index/$*/standard_1/CO &
+	make -f Mf.index index/$*/nucleus_1/CO &
+	make -f Mf.index index/$*/nucleus_8/CO &
+	make -f Mf.index index/$*/lamanno_1/CO &
+	make -f Mf.index index/$*/lamanno_8/CO &
+

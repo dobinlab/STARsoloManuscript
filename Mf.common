@@ -1,0 +1,12 @@
+SHELL=/bin/bash
+thisFile := $(lastword $(MAKEFILE_LIST))
+dd:=/scratch/dobin/STAR/STARsoloPreprint/
+timer:=/bin/time -v
+
+# command to run before every recipe
+#prepComm := set -o history -o histexpand
+prepComm := set -v
+
+thisFile := $(lastword $(MAKEFILE_LIST))
+
+.SUFFIXES: #no implicit rules for 

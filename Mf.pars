@@ -1,0 +1,27 @@
+######################################################### CBUMIcDNAfqFromMapped_GenicGenomic_noMultGenes
+CONDA_ACTIVATE=source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
+
+######################################################## parameters
+pars := count/% index/%
+
+$(pars):     case=$(subst /, ,$@)
+$(pars):     tool=$(word  2, $(case))
+$(pars):   genome=$(word  3, $(case))
+$(pars):  genomeT=$(word  4, $(case))
+$(pars):    toolP=$(word  5, $(case))
+$(pars):     tech=$(word  6, $(case))
+$(pars):    techV=$(word  7, $(case))
+$(pars):   sampleName=$(word  8, $(case))
+$(pars):  threads=$(word  9, $(case))
+$(pars):     runI=$(word 10, $(case))
+
+$(pars):  genomeT1=$(word 1, $(subst _, ,$(genomeT)))
+$(pars):  genomeT2=$(word 2, $(subst _, ,$(genomeT)))
+
+$(pars):    refDir=$(dd)/genomes/index/$(tool)/$(genome)/$(genomeT)/
+$(pars): sampleDir=$(dd)/samples/$(tech)/$(techV)/$(sampleName)/
+$(pars):techOption=$(tech$(tech)v$(techV))
+
+umiLen_2:=10
+umiLen_3:=12
+count/%: umiLen=$(umiLen_$(techV))
