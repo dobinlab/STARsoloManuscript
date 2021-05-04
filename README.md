@@ -21,3 +21,9 @@ count: contains the results of runs
 make all        # will run all tools on all datasets. Benchmarking will take a really long time
 make real       # will run all tools on the real dataset(s)
 make sims       # will run all tolls on the simulated datasets
+
+compare_matlab: comparison figures for simulated and real data
+compare_real_pbmc5k.m                 # real data comparison
+compare_sims_pbmc5k_mgNo.m            # simulations without multi-gene reads
+compare_sims_pbmc5k_mgNo_OnlyExR.m    # simulations without multi-gene reads and without exonic reads
+compare_sims_pbmc5k_mgYes.m           # simulations with multi-gene reads
