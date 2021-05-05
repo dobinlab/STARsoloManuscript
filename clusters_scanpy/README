@@ -1,0 +1,10 @@
+# perform final clustering analysis
+# output: write_9clusters/toolID_cellTypes.h5ad 
+#         write_9clusters/toolID_wilcoxon.h5ad 
+#         write_9clusters/toolID.rgg_wilcoxon.csv 
+#         write_9clusters/toolID_clusterCounts.txt 
+#         write_9clusters/genesListFull.txt
+#
+# figures: stacked_violin_leiden_9_CR.pdf  umapleiden_9_CR_labelsOn.pdf  umapleiden_9_CR.pdf
+
+python -u clusterDE_pbmc5k.py

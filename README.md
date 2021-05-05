@@ -27,3 +27,13 @@ compare_real_pbmc5k.m                 # real data comparison
 compare_sims_pbmc5k_mgNo.m            # simulations without multi-gene reads
 compare_sims_pbmc5k_mgNo_OnlyExR.m    # simulations without multi-gene reads and without exonic reads
 compare_sims_pbmc5k_mgYes.m           # simulations with multi-gene reads
+
+preprocess_scanpy: preprocessing of the count matrices: load, select common cells, normalize
+python real_pbmc5k.py
+
+clusters_scanpy: clustering and DGE
+python clusterDE_pbmc5k.py
+
+clusters_matlab: DGE figures
+DE_pbmc5k.m: plots DGE figures
+
