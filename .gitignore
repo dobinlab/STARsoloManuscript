@@ -9,6 +9,7 @@ exe/kbpy_*
 exe/bwa*
 exe/bedtools*
 exe/mashmap*
+exe/generateDecoyTranscriptome.sh
 
 latex/*.pdf
 latex/*.gz

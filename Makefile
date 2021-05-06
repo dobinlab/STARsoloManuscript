@@ -3,7 +3,11 @@ include Mf.common
 .SECONDARY:
 
 .PHONY: all
-all: real sims bench bench_memUsage
+
+all: prep
+#all: prep real sims bench bench_memUsage
+
+
 
 real:
 	$(MAKE) All_Gene_Real       genome=human_CR_3.0.0   sample1=10X/3/pbmc_5k   threadRun=20/run1
@@ -129,7 +133,7 @@ Gene/alevin-fry:
 ################################## Prep
 .PHONY: prep exe genomes samples genomes/index
 
-prep: exe genomes samples
+prep: samples exe
 
 exe:
 	$(MAKE) -C exe
