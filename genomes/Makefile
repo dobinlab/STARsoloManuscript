@@ -4,9 +4,11 @@ include ../Mf.common
 all: human_CR_3.0.0/GENOME \
      human_CR_3.0.0/INDEXES
 
-extras: \
+h38_Gencode37: \
      h38_Gencode37/GENOME \
      h38_Gencode37/INDEXES \
+
+mouse_CR3: \
      mouse_CR_3.0.0/GENOME \
      mouse_CR_3.0.0/INDEXES
 
@@ -15,10 +17,12 @@ forDiane: \
      mm10_GencodeM21_Diane/INDEXES
 
 #################################################################################################################################### genome specifics
+human_CR_3.0.0/%: CRgenomeDir=$(dd)/genomes/human_CR_3.0.0/refdata-cellranger-GRCh38-3.0.0
+
 human_CR_3.0.0/refdata-cellranger-GRCh38-3.0.0: 
 	mkdir -p $(@D) && cd $(@D) && \
-	wget -r http://labshare.cshl.edu/shares/dobin/dobin/STARsolo/Preprint/Genomes/refdata-cellranger-GRCh38-3.0.0/ && \
-	mv `find ./ -name refdata-cellranger-GRCh38-3.0.0` . && \
+	wget -r http://labshare.cshl.edu/shares/dobin/dobin/STARsolo/Preprint/Genomes/refdata-cellranger-GRCh38-3.0.0 && \
+	mv labshare.cshl.edu/shares/dobin/dobin/STARsolo/Preprint/Genomes/refdata-cellranger-GRCh38-3.0.0/ . && \
    	rm -rf labshare.cshl.edu
 
 human_CR_3.0.0/genome.fa: human_CR_3.0.0/refdata-cellranger-GRCh38-3.0.0
@@ -77,7 +81,7 @@ mm10_GencodeM21_Diane/mm10_no_alt_analysis_set_ENCODE.fasta:
 
 ############################################################################################################################################
 %/GENOME: %/genome.fa %/annotations.gtf %/transcripts.fa %/transcript_to_gene.txt %/genes.tsv
-	echo Done > Genome
+	echo Done > %/GENOME
 
 %/transcripts.fa: %/genome.fa %/annotations.gtf
 	cd $* && \
@@ -98,12 +102,11 @@ mm10_GencodeM21_Diane/mm10_no_alt_analysis_set_ENCODE.fasta:
 %/INDEXES: genome = $*
 %/INDEXES:
 	[[ ! -z "$(CRgenomeDir)" ]] && mkdir -p index/CellRanger_5.0.1/$(genome) && cd index/CellRanger_5.0.1/$(genome) && ln --force -s $(CRgenomeDir) standard
-	cdd
 	$(MAKE) -f Mf.index index/kbpy_0.25.0/$(genome)/standard_1/CO
 	$(MAKE) -f Mf.index index/salmon_1.4.0/$(genome)/standard/CO
 	$(MAKE) -f Mf.index index/salmon_1.4.0/$(genome)/decoyFull/CO
-	$(MAKE) -f Mf.index index/STAR_2.7.8a/$(genome)/fullSA/CO
-	$(MAKE) -f Mf.index index/STAR_2.7.8a/$(genome)/sparseSA3/CO
+	$(MAKE) -f Mf.index index/STAR_2.7.9a/$(genome)/fullSA/CO
+	$(MAKE) -f Mf.index index/STAR_2.7.9a/$(genome)/sparseSA3/CO
 	$(MAKE) -f Mf.index index/salmon_1.4.0/$(genome)/decoyPartial/CO
 	$(MAKE) -f Mf.index index/kbpy_0.25.0/$(genome)/nucleus_1/CO
 

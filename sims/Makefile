@@ -15,10 +15,12 @@ sim_mult: \
           ../genomes/$(genome)/genome_transcripts.1line.fa \
           ../genomes/index/bwa/$(genome)/trgen/BWA_INDEX \
           fastq/$(sample)/cDNA_CBUMI.fq \
-          bwa_map/$(genome)/$(sample)/BWA_MAP \
-          bwa_map/$(genome)/$(sample)/MAPPED_UNMAPPED \
+          bwa_map/$(genome)/$(sample)/BWA_MAPPED_UNMAPPED \
           bwa_map/$(genome)/$(sample)/MultiGeneNo/SIMS_SAMPLE \
           bwa_map/$(genome)/$(sample)/MultiGeneYes/SIMS_SAMPLE
+
+          #bwa_map/$(genome)/$(sample)/BWA_MAP \
+          #bwa_map/$(genome)/$(sample)/MAPPED_UNMAPPED \
 
 
 %/SIMS_SAMPLE: dirR1R2=$(dd)/samples/$(sample)_sims_$(genome)_$(*F)
@@ -95,6 +97,12 @@ bwa_map/%/BWA_MAP:
 	cat aligned.sam | awk -O -b -v bcLen=$(cbumiLen) -v cbLen=$(cbLen) -f $(dd)/sims/samToMappedAndUnmapped_mult.awk &&\
 	echo Done > MAPPED_UNMAPPED
 
+# bwa map and convert: save disk space. Replaces BWA_MAP and MAPPED_UNMAPPED
+bwa_map/%/BWA_MAPPED_UNMAPPED:
+	mkdir -p $(@D) && cd $(@D) &&\
+	$(dd)/exe/bwa mem -a -M -t 20    $(dd)/genomes/index/bwa/$(genome)/trgen/bwaIndex    $(dd)/sims/fastq/$(sample)/cDNA_CBUMI.fq  2>log.map \
+		| awk -O -b -v bcLen=$(cbumiLen) -v cbLen=$(cbLen) -f $(dd)/sims/samToMappedAndUnmapped_mult.awk   &&\
+	echo "Done" > BWA_MAPPED_UNMAPPED
 
 
 

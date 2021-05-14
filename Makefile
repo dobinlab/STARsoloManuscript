@@ -4,20 +4,21 @@ include Mf.common
 
 .PHONY: all
 
-all: prep
-#all: prep real sims bench bench_memUsage
-
+all: real sims_run
+#all: prep real sims_generate sims_run bench bench_memUsage
 
 
 real:
-	$(MAKE) All_Gene_Real       genome=human_CR_3.0.0   sample1=10X/3/pbmc_5k   threadRun=20/run1
-	$(MAKE) All_GeneFull_Real   genome=human_CR_3.0.0   sample1=10X/3/pbmc_5k   threadRun=20/run1
+	$(MAKE) All_Gene_Real       genome=human_CR_3.0.0   sample=10X/3/pbmc_5k   threadRun=20/run1
+	$(MAKE) All_GeneFull_Real   genome=human_CR_3.0.0   sample=10X/3/pbmc_5k   threadRun=20/run1
 
-sims:
-	$(MAKE) All_Gene_Real       genome=human_CR_3.0.0   sample1=10X/3/pbmc_5k_sims_MultiGeneNo    threadRun=20/run1
-	$(MAKE) All_Gene_Real       genome=human_CR_3.0.0   sample1=10X/3/pbmc_5k_sims_MultiGeneYes   threadRun=20/run1
-	$(MAKE) All_Gene_Real       genome=human_CR_3.0.0   sample1=10X/3/pbmc_5k_sims_MultiGeneNo_OnlyExonicReads   threadRun=20/run1
-	$(MAKE) All_Gene_Real       genome=human_CR_3.0.0   sample1=10X/3/pbmc_5k_sims_MultiGeneYes_OnlyExonicReads  threadRun=20/run1
+sims_generate:              # generates simulated data
+	$(MAKE) -C sims
+
+sims_run:
+	$(MAKE) All_Gene_Sims       genome=human_CR_3.0.0   sample=10X/3/pbmc_5k_sims_human_CR_3.0.0_MultiGeneNo    threadRun=20/run1
+	$(MAKE) All_Gene_Sims       genome=human_CR_3.0.0   sample=10X/3/pbmc_5k_sims_human_CR_3.0.0_MultiGeneYes   threadRun=20/run1
+	$(MAKE) All_Gene_Sims       genome=human_CR_3.0.0   sample=10X/3/pbmc_5k_sims_human_CR_3.0.0_MultiGeneNo_OnlyExonicReads   threadRun=20/run1
 
 bench:
 	$(MAKE) bench/All_Gene_Real benchThreadNumbers="20 8 12 4 16" genome=human_CR_3.0.0 sample=10X/3/pbmc_5k
@@ -131,9 +132,15 @@ Gene/alevin-fry:
 
 
 ################################## Prep
-.PHONY: prep exe genomes samples genomes/index
+.PHONY: prep samples exe genomes
 
-prep: samples exe
+prep: data samples exe genomes
+
+data:
+	$(MAKE) -C data
+
+samples:
+	$(MAKE) -C samples
 
 exe:
 	$(MAKE) -C exe
@@ -141,6 +148,4 @@ exe:
 genomes:
 	$(MAKE) -C genomes
 
-samples:
-	$(MAKE) -C samples
 

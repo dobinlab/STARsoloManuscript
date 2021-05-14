@@ -1,6 +1,6 @@
 SHELL=/bin/bash
 thisFile := $(lastword $(MAKEFILE_LIST))
-dd:=/scratch/dobin/STAR/STARsoloPreprint/
+dd:=/scratch/dobin/STAR/STARsoloManuscript/
 timer:=/bin/time -v
 
 # command to run before every recipe

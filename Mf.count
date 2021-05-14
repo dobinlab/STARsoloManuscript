@@ -97,6 +97,8 @@ count/STAR_%/CO: # target is COmpletion file
 
 ########################################################################################################## SALMON
 count/salmon%: processName:=salmon
+count/salmon%: refDirSalmon=$(dd)/genomes/index/$(salmon)/$(genome)/$(genomeT)/
+
 
 count/salmon%: tech10Xv2=chromium
 count/salmon%: tech10Xv3=chromiumV3
@@ -135,7 +137,7 @@ define RUN_salmon
 	$(timer) $(dd)/exe/$(salmon)    $(salmonParAll) \
 	-1 $(sampleDir)/*_R1_* -2 $(sampleDir)/*_R2_* \
 	--$(techOption) -p $(threads) -o ./map \
-        -i $(refDir)/index --tgMap  $(t2gFile) &> log.salmon &&\
+        -i $(refDirSalmon)/index --tgMap  $(t2gFile) &> log.salmon &&\
 	echo Success > ./map/COMmap
 endef
 
@@ -162,7 +164,7 @@ afQuantResolutions := trivial cr-like cr-like-em
 
 define RUN_alevin-fry_quant
 	eval "$$(conda shell.bash hook)" && conda activate $(alevin-fry) &&\
-	cp $(t2gFile) t2g.txt && if [[ $@ == *decoy* ]]; then awk '{print $$1 "\t" $$1}' $(refDir)/decoys.txt >> t2g.txt; fi &&\
+	cp $(t2gFile) t2g.txt && if [[ $@ == *decoy* ]]; then awk '{print $$1 "\t" $$1}' $(refDirSalmon)/decoys.txt >> t2g.txt; fi &&\
 	for res in $(afQuantResolutions); do \
 		$(timer) alevin-fry quant --resolution $$res -t $(threads) -i ./ -o ./quant_$$res --use-mtx --tg-map t2g.txt &> log.quant_$$res &&\
 		echo Success > ./quant_$$res/CO; \
