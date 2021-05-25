@@ -4,9 +4,9 @@ include ../Mf.common
 all: human_CR_3.0.0/GENOME \
      human_CR_3.0.0/INDEXES
 
-h38_Gencode37: \
+extra_h38_Gencode37: \
      h38_Gencode37/GENOME \
-     h38_Gencode37/INDEXES \
+     h38_Gencode37/INDEXES
 
 mouse_CR3: \
      mouse_CR_3.0.0/GENOME \
@@ -45,6 +45,8 @@ mouse_CR_3.0.0/annotations.gtf:
 	ln -s /scratch/dobin/genomes/Mouse/refdata-cellranger-mm10-3.0.0/genes/genes.gtf annotations.gtf
 
 ############################################
+h38_Gencode37/%: CRgenomeDir=""
+
 h38_Gencode37/genome.fa:
 	mkdir -p h38_Gencode37 && cd h38_Gencode37 &&\
 	wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_37/GRCh38.primary_assembly.genome.fa.gz &&\
@@ -81,7 +83,7 @@ mm10_GencodeM21_Diane/mm10_no_alt_analysis_set_ENCODE.fasta:
 
 ############################################################################################################################################
 %/GENOME: %/genome.fa %/annotations.gtf %/transcripts.fa %/transcript_to_gene.txt %/genes.tsv
-	echo Done > %/GENOME
+	echo Done > $(@D)/GENOME
 
 %/transcripts.fa: %/genome.fa %/annotations.gtf
 	cd $* && \
@@ -101,7 +103,6 @@ mm10_GencodeM21_Diane/mm10_no_alt_analysis_set_ENCODE.fasta:
 .PHONY: %/INDEXES
 %/INDEXES: genome = $*
 %/INDEXES:
-	[[ ! -z "$(CRgenomeDir)" ]] && mkdir -p index/CellRanger_5.0.1/$(genome) && cd index/CellRanger_5.0.1/$(genome) && ln --force -s $(CRgenomeDir) standard
 	$(MAKE) -f Mf.index index/kbpy_0.25.0/$(genome)/standard_1/CO
 	$(MAKE) -f Mf.index index/salmon_1.4.0/$(genome)/standard/CO
 	$(MAKE) -f Mf.index index/salmon_1.4.0/$(genome)/decoyFull/CO
@@ -109,4 +110,5 @@ mm10_GencodeM21_Diane/mm10_no_alt_analysis_set_ENCODE.fasta:
 	$(MAKE) -f Mf.index index/STAR_2.7.9a/$(genome)/sparseSA3/CO
 	$(MAKE) -f Mf.index index/salmon_1.4.0/$(genome)/decoyPartial/CO
 	$(MAKE) -f Mf.index index/kbpy_0.25.0/$(genome)/nucleus_1/CO
+	[[ ! -z "$(CRgenomeDir)" ]] && mkdir -p index/CellRanger_5.0.1/$(genome) && cd index/CellRanger_5.0.1/$(genome) && ln --force -s $(CRgenomeDir) standard
 

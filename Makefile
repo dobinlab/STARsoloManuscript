@@ -30,6 +30,9 @@ bench_memUsage:
 
 
 ####################################################################################################################### extras
+real_Gencode37:
+	$(MAKE) All_Gene_Real       genome=h38_Gencode37   sample=10X/3/pbmc_5k   threadRun=20/run1
+
 real_mult:
 	$(MAKE) -f Mf.count count/STAR_2.7.9x/human_CR_3.0.0/fullSA/10X_CR4_noSAM_mult/10X/3/pbmc_5k/20/run1/CO
 	$(MAKE) -f Mf.count count/STAR_2.7.9x/human_CR_3.0.0/fullSA/10X_CR4_noSAM_mult_UniqueGenomic/10X/3/pbmc_5k/20/run1/CO
