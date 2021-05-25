@@ -8,6 +8,7 @@ exe/bwa*
 exe/bedtools*
 exe/mashmap*
 exe/generateDecoyTranscriptome.sh
+exe/gffread
 
 latex/*.pdf
 latex/*.gz

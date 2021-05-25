@@ -26,11 +26,11 @@ human_CR_3.0.0/refdata-cellranger-GRCh38-3.0.0:
    	rm -rf labshare.cshl.edu
 
 human_CR_3.0.0/genome.fa: human_CR_3.0.0/refdata-cellranger-GRCh38-3.0.0
-	mkdir -p $(@D) && cd $(@D) && \
+	mkdir -p $(@D) && cd $(@D) && 'rm' -f genome.fa &&\
 	ln -s refdata-cellranger-GRCh38-3.0.0/fasta/genome.fa genome.fa
 
 human_CR_3.0.0/annotations.gtf: human_CR_3.0.0/refdata-cellranger-GRCh38-3.0.0
-	mkdir -p $(@D) && cd $(@D) && \
+	mkdir -p $(@D) && cd $(@D) && 'rm' -f annotations.gtf &&\
 	ln -s refdata-cellranger-GRCh38-3.0.0/genes/genes.gtf annotations.gtf
 
 ############################################
@@ -92,7 +92,7 @@ mm10_GencodeM21_Diane/mm10_no_alt_analysis_set_ENCODE.fasta:
 
 %/transcript_to_gene.txt: %/annotations.gtf
 	cd $* && \
-	awk '$$3=="transcript" {gene=$$0; gsub(/.*gene_id \"/,"",gene); gsub(/\".*/,"",gene); tr=$$0; gsub(/.*transcript_id \"/,"",tr); gsub(/\".*/,"",tr); print tr "\t" gene }' \
+	awk '$$3=="transcript" {gene=$$0; gsub(/.*gene_id "/,"",gene); gsub(/".*/,"",gene); tr=$$0; gsub(/.*transcript_id "/,"",tr); gsub(/".*/,"",tr); print tr "\t" gene }' \
 	    annotations.gtf > transcript_to_gene.txt && \
 	awk '{print $$1 "\t" $$2}' transcript_to_gene.txt > transcript_to_gene.2col.txt
 

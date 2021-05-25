@@ -53,7 +53,18 @@ bedtools:
 	chmod u+x bedtools.static.binary &&\
 	ln -s bedtools.static.binary bedtools
 
+alevin-fry_0.1.0:
+	conda create -y -n alevin-fry_0.1.0 python==3.8 pip
+	eval "$$(conda shell.bash hook)" && conda activate alevin-fry_0.1.0 && \
+	conda install -y -c bioconda alevin-fry=0.1.0 &&\
+	mkdir -p alevin-fry_0.1.0
+
+cellranger-5.0.1:
+	wget http://labshare.cshl.edu/shares/dobin/dobin/STARsolo/Preprint/10X/cellranger-5.0.1.tar.gz &&\
+	tar xvfz cellranger-5.0.1.tar.gz && 'rm' -f cellranger-5.0.1.tar.gz
+
 gffread:
 	wget https://github.com/gpertea/gffread/releases/download/v0.12.6/gffread-0.12.6.Linux_x86_64.tar.gz &&\
-	tar xvfz gffread-0.12.6.Linux_x86_64.tar.gz && 'rm' -f gffread-0.12.6.Linux_x86_64.tar.gz &&\
+	tar xvfz gffread-0.12.6.Linux_x86_64.tar.gz &&\
+	'rm' -f gffread-0.12.6.Linux_x86_64.tar.gz &&\
 	ln -s gffread-0.12.6.Linux_x86_64/gffread .
