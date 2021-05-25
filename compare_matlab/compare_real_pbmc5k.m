@@ -1,10 +1,10 @@
 Init
 casePrefix='/scratch/dobin/STAR/STARsoloPreprint/maia1/';
 
-% %%
-% figTablesDir = 'FigTables/Real-humanCR300-pbmc5k/';
-% savePrefix = [ figTablesDir ];
-% load([savePrefix 'Res.mat'])%, 'caseTable1', 'RD', 'MARD', 'corrGenesCells', 'corrCells');
+%%
+figTablesDir = 'FigTables/Real-humanCR300-pbmc5k/';
+savePrefix = [ figTablesDir ];
+load([savePrefix 'Res.mat'])%, 'caseTable1', 'RD', 'MARD', 'corrGenesCells', 'corrCells');
 
 %% cases
 genome1='human_CR_3.0.0';  sample1='pbmc_5k'; run1='/20/b01/'; sampleType='/10X/3/'; opt_STAR={}; opt_alevinFry='';
